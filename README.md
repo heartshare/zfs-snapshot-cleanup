@@ -11,7 +11,7 @@ EXCLUDE = Regex to filter snapshots (egrep -v '$EXCLUDE')
 
 FORCE = Do not ask for confirmation
 
-Usage:
+# Usage:
 
   ./zfs-snapshot-cleanup.bash --dataset=volsata01 --keepdays=7
   
