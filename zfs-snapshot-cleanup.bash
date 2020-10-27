@@ -40,7 +40,7 @@ then
         exit 1
 fi
 
-SKIPFILESYSTEMREGEX='.system|/sys/swap'
+SKIPFILESYSTEMREGEX='\.system|/sys/swap'
 SNAPSHOTSTODELETE=''
 FROMDATE=$(date -j -f "%Y-%m-%d %H:%M:%s" "1970-01-01 00:00:00" +"%s")
 TODATE=$(date -n -v -${KEEPDAYS}d +"%s")
