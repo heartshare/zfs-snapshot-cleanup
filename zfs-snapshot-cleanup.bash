@@ -40,9 +40,8 @@ then
         exit 1
 fi
 
-SKIPFILESYSTEMREGEX='\.system|/sys/swap'
-SNAPSHOTSTODELETE=''
-FROMDATE=$(date -j -f "%Y-%m-%d %H:%M:%s" "1970-01-01 00:00:00" +"%s")
+SKIPFILESYSTEMREGEX='.system|/sys/swap'
+SNAPSHOTSTODELETE=()
 TODATE=$(date -n -v -${KEEPDAYS}d +"%s")
 
 FILESYSTEMS=$(zfs list -H -t filesystem,volume -o name $DATASET | egrep -v $SKIPFILESYSTEMREGEX | sort)
@@ -65,33 +64,32 @@ do
     for SNAPSHOT in $SNAPSHOTS
     do
         SNAPSHOTDATE=$(date -j -f "%a %b %d %H:%M %Y" "$(zfs list -H -r -t snapshot -o creation $SNAPSHOT)" +"%s")
-        if ((SNAPSHOTDATE >= $FROMDATE && SNAPSHOTDATE <= $TODATE))
+        if ((SNAPSHOTDATE <= $TODATE))
         then
-            SNAPSHOTSTODELETE+="$SNAPSHOT "
+            SNAPSHOTSTODELETE+=( $( echo $SNAPSHOT ) )
         fi
     done
-    SNAPSHOTSTODELETE=$SNAPSHOTSTODELETE | sort
 done
 
-if [[ ! $SNAPSHOTSTODELETE == '' ]]
+if [[ ! $SNAPSHOTSTODELETE == '' && ! -z $SNAPSHOTSTODELETE ]]
 then
     if [[ $FORCE == 'TRUE' ]]
     then
-        for SNAPSHOT in $SNAPSHOTSTODELETE
+        for SNAPSHOT in ${SNAPSHOTSTODELETE[@]}
         do
             zfs destroy $SNAPSHOT
         done
     else
-        for SNAPSHOT in $SNAPSHOTSTODELETE
+        for SNAPSHOT in ${SNAPSHOTSTODELETE[@]}
         do
             echo "$SNAPSHOT"
         done
         echo
-        read -p "Are you sure you want to destroy the above ($(echo "$SNAPSHOTSTODELETE" | wc -w | tr -d '[:space:]')) snapshots? " -r
+        read -p "Are you sure you want to destroy the above ($(echo "${SNAPSHOTSTODELETE[@]}" | wc -w | tr -d '[:space:]')) snapshots? " -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]
         then
-            for SNAPSHOT in $SNAPSHOTSTODELETE
+            for SNAPSHOT in ${SNAPSHOTSTODELETE[@]}
             do
                 echo "zfs destroy $SNAPSHOT"
                 zfs destroy $SNAPSHOT
